@@ -22,6 +22,11 @@ void Init_Ultrasonic(void){
 	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_PE_MASK | PORT_PCR_IRQC(0x0b);
 	
 	//PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] &= ~PORT_PCR_PS_MASK;
+	
+	/* Enable Interrupts */
+	NVIC_SetPriority(PORTA_IRQn, 128); // 0, 64, 128 or 192
+	NVIC_ClearPendingIRQ(PORTA_IRQn); 
+	NVIC_EnableIRQ(PORTA_IRQn);
 }
 
 void Generate_Trigger(){
