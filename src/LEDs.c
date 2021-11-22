@@ -7,15 +7,15 @@ void Init_RGB_LEDs(void) {
 	
 	// Make 3 pins GPIO
 	PORTB->PCR[RED_LED_POS] &= ~PORT_PCR_MUX_MASK;          
-	PORTB->PCR[RED_LED_POS] |= PORT_PCR_MUX(3);          
+	PORTB->PCR[RED_LED_POS] |= PORT_PCR_MUX(1);          
 	PORTB->PCR[GREEN_LED_POS] &= ~PORT_PCR_MUX_MASK;          
-	PORTB->PCR[GREEN_LED_POS] |= PORT_PCR_MUX(3);          
+	PORTB->PCR[GREEN_LED_POS] |= PORT_PCR_MUX(1);          
 	PORTD->PCR[BLUE_LED_POS] &= ~PORT_PCR_MUX_MASK;          
-	PORTD->PCR[BLUE_LED_POS] |= PORT_PCR_MUX(4);          
+	PORTD->PCR[BLUE_LED_POS] |= PORT_PCR_MUX(1);          
 	
 	// Set ports to outputs
-	// PTB->PDDR |= MASK(RED_LED_POS) | MASK(GREEN_LED_POS);
-	// PTD->PDDR |= MASK(BLUE_LED_POS);
+	PTB->PDDR |= MASK(RED_LED_POS) | MASK(GREEN_LED_POS);
+	PTD->PDDR |= MASK(BLUE_LED_POS);
 }
 
 void Control_RGB_LEDs(unsigned int red_on, unsigned int green_on, unsigned int blue_on) {

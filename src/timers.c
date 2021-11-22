@@ -1,11 +1,6 @@
 #include "timers.h"
 #include "MKL25Z4.h"
-
-volatile unsigned PIT_interrupt_counter = 0;
-volatile unsigned LCD_update_requested = 0;
-
-extern volatile uint8_t hour, minute, second;
-extern volatile uint16_t millisecond;
+#include "ultrasonic.h"
 
 void Init_PIT(unsigned period) {
 	// Enable clock to PIT module
@@ -43,7 +38,6 @@ void Stop_PIT(void) {
 
 
 void PIT_IRQHandler() {
-	static unsigned LCD_update_delay = LCD_UPDATE_PERIOD;
 
 	//clear pending IRQ
 	NVIC_ClearPendingIRQ(PIT_IRQn);
@@ -54,36 +48,9 @@ void PIT_IRQHandler() {
 		PIT->CHANNEL[0].TFLG &= PIT_TFLG_TIF_MASK;
 		
 		// Do ISR work
-		millisecond++;
-		if (millisecond > 999) {
-			millisecond = 0;
-			second++;
-			if (second > 59) {
-				second = 0;
-				minute++;
-				if (minute > 59) {
-					minute = 0;
-					hour++;
-				}
-			}
-		}
-
-		LCD_update_delay--;
-		if (LCD_update_delay == 0) {
-			LCD_update_requested = 1;
-			LCD_update_delay = LCD_UPDATE_PERIOD;
-		}
-
-		// light LED in first portion of each second
-		if (millisecond < 600) {
-			Set_PWM_Value(millisecond/6);
-		}
-		
-				
-	} else if (PIT->CHANNEL[1].TFLG & PIT_TFLG_TIF_MASK) {
-		// clear status flag for timer channel 1
-		PIT->CHANNEL[1].TFLG &= PIT_TFLG_TIF_MASK;
-	} 
+		PIN_TRIG_PT->PCOR |= PIN_TRIG;
+		Stop_PIT();
+	}	
 }
 
 void Init_PWM()
