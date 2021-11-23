@@ -1,6 +1,12 @@
 #include "timers.h"
 #include "MKL25Z4.h"
 #include "ultrasonic.h"
+#include <stdio.h>
+
+extern volatile int measureFlag;
+extern volatile int overflow;
+extern volatile int timeElapsed;
+static int echoFallingEdge = 0;
 
 void Init_PIT(unsigned period) {
 	// Enable clock to PIT module
@@ -36,9 +42,8 @@ void Stop_PIT(void) {
 	PIT->CHANNEL[0].TCTRL &= ~PIT_TCTRL_TEN_MASK;
 }
 
-
 void PIT_IRQHandler() {
-
+	
 	//clear pending IRQ
 	NVIC_ClearPendingIRQ(PIT_IRQn);
 	
@@ -53,44 +58,85 @@ void PIT_IRQHandler() {
 	}	
 }
 
-void Init_PWM()
+void Init_TPM()
 {
 	//turn on clock to TPM 
-	SIM->SCGC6 |= SIM_SCGC6_TPM0_MASK | SIM_SCGC6_TPM2_MASK;
+	SIM->SCGC6 |= SIM_SCGC6_TPM0_MASK;
 	
 	//set clock source for tpm
 	SIM->SOPT2 |= (SIM_SOPT2_TPMSRC(1) | SIM_SOPT2_PLLFLLSEL_MASK);
 
 	//load the counter and mod
-	TPM0->MOD = PWM_MAX_COUNT*2;
-	TPM2->MOD = PWM_MAX_COUNT*2;
+	TPM0->MOD = PWM_MAX_COUNT;
 		
-	//set channels to center-aligned high-true PWM
-	TPM0->CONTROLS[1].CnSC = TPM_CnSC_MSB_MASK | TPM_CnSC_ELSB_MASK;
-	TPM2->CONTROLS[0].CnSC = TPM_CnSC_MSB_MASK | TPM_CnSC_ELSB_MASK;
-	TPM2->CONTROLS[1].CnSC = TPM_CnSC_MSB_MASK | TPM_CnSC_ELSB_MASK;
+	//set channel 4 to input capture mode
+	TPM0->CONTROLS[4].CnSC = TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK;
 
-	//set TPM to up-down and divide by 8 prescaler and clock mode
-	TPM0->SC = (TPM_SC_CPWMS_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(3));
-	TPM2->SC = (TPM_SC_CPWMS_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(3));
+	//Enable Timer Interrupt
+	TPM0->SC = (TPM_SC_TOIE_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(3));
 	
-	//set trigger mode
-	TPM0->CONF |= TPM_CONF_TRGSEL(0x8);
-	TPM2->CONF |= TPM_CONF_TRGSEL(0x8);
-	
-	TPM0->CONTROLS[1].CnV = PWM_MAX_COUNT/2;
-	TPM2->CONTROLS[0].CnV = PWM_MAX_COUNT/2;
-	TPM2->CONTROLS[1].CnV = PWM_MAX_COUNT/2;
-	
+	//avoid any interrupt trigger after intialization
+	Disable_TPM();
 }
 
-
-void Set_PWM_Value(uint8_t duty_cycle) {
-	uint16_t n;
-	
-	n = duty_cycle*PWM_MAX_COUNT/100; 
-  TPM0->CONTROLS[1].CnV = n;
-  TPM2->CONTROLS[0].CnV = n;
-  TPM2->CONTROLS[1].CnV = n;
+void Init_TPM_Interrupt(){
+	//Initalize interrupts for TPM
+	NVIC_SetPriority(TPM0_IRQn, 128); // 0, 64, 128 or 192
+	NVIC_ClearPendingIRQ(TPM0_IRQn); 
+	NVIC_EnableIRQ(TPM0_IRQn);
 }
+
+void Enable_TPM(){
+	TPM0->SC &= ~TPM_SC_CMOD(3);
+	TPM0->SC |= TPM_SC_CMOD(3);
+}
+
+void Disable_TPM(){
+	TPM0->SC &= ~TPM_SC_CMOD(3);
+}
+
+float TPM_PLL_Clock_Speed(int prescaleMode){
+	//return clock speed in seconds/tick
+	float val = PLL_CLOCK_FREQUENCY / prescaleMode;
+	val = 1 / val;
+	return val;
+}
+
+void TPM0_IRQHandler(void) {
+	
+	//Keep track of overflow for time elapsed
+	if(TPM0_SC & TPM_SC_TOF_SHIFT){
+		
+		//clear timer overflow flag and increment overflow counter
+		TPM0_SC |= TPM_SC_TOF_MASK;
+		overflow++;
+	}
+	
+	//Rising edge or falling edge has occured, measurement has either started or completed
+	if(TPM0_C4SC & TPM_CnSC_CHF_MASK) {
+		
+		//Clear channel flag
+		TPM0_C4SC |= TPM_CnSC_CHF_MASK;
+		
+		//When it's rising edge start measuring
+		if(!echoFallingEdge) {
+			
+			//Clear the count on the tpm to start capture for the input
+			TPM0_CNT = 0;
+			
+			//Signal to start measurement
+			echoFallingEdge = 1;
+		}
+		
+		//When it's falling edge capture time elapsed
+		else {
+			// Get the time elapsed
+			timeElapsed = TPM0_CNT + overflow*PWM_MAX_COUNT;
+			
+			//Set the flag that the measurement is complete
+			measureFlag = 1;
+		}
+	}
+}
+
 // *******************************ARM University Program Copyright � ARM Ltd 2013*************************************   
