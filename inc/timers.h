@@ -1,6 +1,6 @@
 #ifndef TIMERS_H
 #define TIMERS_H
-#include "MKL25Z4.h"
+#include <MKL25Z4.h>
 
 #define BUS_CLOCK_FREQUENCY (24E6)
 #define TICK_FREQUENCY (1E3)

@@ -1,6 +1,7 @@
 #include "timers.h"
 #include "MKL25Z4.h"
 #include "ultrasonic.h"
+#include "LEDs.h"
 
 void Init_PIT(unsigned period) {
 	// Enable clock to PIT module
@@ -8,10 +9,10 @@ void Init_PIT(unsigned period) {
 	
 	// Enable module, freeze timers in debug mode
 	PIT->MCR &= ~PIT_MCR_MDIS_MASK;
-	PIT->MCR |= PIT_MCR_FRZ_MASK;
+	//PIT->MCR |= PIT_MCR_FRZ_MASK;
 	
 	// Initialize PIT0 to count down from argument 
-	PIT->CHANNEL[0].LDVAL = PIT_LDVAL_TSV(period);
+	PIT->CHANNEL[0].LDVAL = PIT_LDVAL_TSV(period * 24);
 
 	// No chaining
 	PIT->CHANNEL[0].TCTRL &= PIT_TCTRL_CHN_MASK;
@@ -50,5 +51,6 @@ void PIT_IRQHandler() {
 		// Do ISR work
 		PIN_TRIG_PT->PCOR |= PIN_TRIG;
 		Stop_PIT();
+		Control_RGB_LEDs(1,1,1);
 	}	
 }

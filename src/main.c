@@ -7,6 +7,7 @@
 #include "lcd_4bit.h"
 #include "LEDs.h"
 #include "delay.h"
+#include "switches.h"
 
 /*----------------------------------------------------------------------------
   MAIN function
@@ -14,10 +15,19 @@
 int main (void) {
 	
 	Init_RGB_LEDs();
-	Init_PIT(BUS_CLOCK_FREQUENCY/240); //gives us a period of 10 microseconds
+	Init_Ultrasonic();
+	//Init_PIT(10); //gives us a period of 10 microseconds
+	//init_switch();
 	//Init_LCD();
 	__enable_irq();
 	Generate_Trigger();
+	Delay(100);
+	//while(1){
+			//Generate_Trigger();
+			//Delay(1000);
+	//}
+	
+	
 	
 	/*
 	Clear_LCD();
