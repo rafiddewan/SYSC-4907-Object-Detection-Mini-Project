@@ -70,7 +70,7 @@ void Init_TPM()
 	TPM0->MOD = PWM_MAX_COUNT;
 		
 	//set channel 4 to input capture mode
-	TPM0->CONTROLS[4].CnSC = TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK;
+	TPM0->CONTROLS[3].CnSC = TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK;
 
 	//Enable Timer Interrupt
 	TPM0->SC = (TPM_SC_TOIE_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(3));
