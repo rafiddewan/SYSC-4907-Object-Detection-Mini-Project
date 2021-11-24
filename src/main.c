@@ -15,10 +15,10 @@ extern volatile int PIT_done;
  *----------------------------------------------------------------------------*/
 int main (void) {
 	Init_RGB_LEDs();
-	Init_Ultrasonic();
+	//Init_Ultrasonic();
 	Init_PIT(10); //gives us a period of 10 microseconds
 	//init_switch();
-	//Init_LCD();
+	Init_LCD();
 	__enable_irq();
 	while(1){
 	Generate_Trigger();
