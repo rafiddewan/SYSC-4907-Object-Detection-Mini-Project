@@ -49,7 +49,7 @@ void PIT_IRQHandler() {
 		
 		// Do ISR work
 		PIN_TRIG_PT->PCOR |= PIN_TRIG;
-		Control_RGB_LEDs(1,0,0);
+		//Control_RGB_LEDs(1,0,0);
 		Stop_PIT();
 	}	
 }
@@ -66,10 +66,10 @@ void Init_TPM()
 	TPM0->MOD = PWM_MAX_COUNT;
 		
 	//set channel 4 to input capture mode on both edges and enable channel interrupts
-	TPM0->CONTROLS[3].CnSC = TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK;
+	TPM0->CONTROLS[4].CnSC = TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK;
 
-	//Enable Timer Interrupt with clock divider as 2
-	TPM0->SC = (TPM_SC_TOIE_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(1));
+	//Enable Timer Interrupt with clock divider as 8
+	TPM0->SC = (TPM_SC_TOIE_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(3));
 	
 	//avoid any interrupt trigger after intialization
 	Disable_TPM();
@@ -83,7 +83,7 @@ void Init_TPM_Interrupt(){
 }
 
 void Enable_TPM(){
-	// Ensure the clokc is disabled
+	// Ensure the clock is disabled
 	TPM0->SC &= ~TPM_SC_CMOD(3);
 	
 	//Start reload counter value on trigger

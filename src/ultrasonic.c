@@ -22,16 +22,16 @@ void Init_Ultrasonic(void){
 	//PIN_ECHO_PT->PDDR &= ~PIN_ECHO; // input
 		
 	//Set pin multiplexer to TPM0_CH4 mode and enable 
-	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_MUX(3);
+	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_MUX(3) | PORT_PCR_PE_MASK;
 	
 	//Initialize TPM and it's interrupts
 	Init_TPM();
 	Init_TPM_Interrupt();
 	
 
-	//pull down resistors
-//	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_PS_MASK;
-//	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_IRQC(0x0b); //Enable interrupt on pin as gpio
+	//pull up resistors
+	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_PS_MASK;
+	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_IRQC(0x0b); 
 	
 	//PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] &= ~PORT_PCR_PS_MASK;
 	
@@ -42,7 +42,7 @@ void Init_Ultrasonic(void){
 }
 
 void Generate_Trigger(){
-	//Enable_TPM();
+	Enable_TPM();
 	PIN_TRIG_PT->PSOR |= PIN_TRIG;
 	//Delay(10);
 	//PIN_TRIG_PT->PCOR |= PIN_TRIG;
@@ -64,7 +64,7 @@ void Measure_Reading(float* measurement) {
 	//reset overflow counter
 	overflow = 0;
 	//convert ticks to miliseconds
-	timeElapsed = ticksElapsed * TPM_PLL_Clock_Speed(16) * 1000;
+	timeElapsed = ticksElapsed * TPM_PLL_Clock_Speed(8) * 1000;
 	
 	//Distance (cm) = (Time of Entire Pulse (ms) / 2) * speed of sound (cm/ms)
 	*measurement = (timeElapsed / 2) * speedOfSound;

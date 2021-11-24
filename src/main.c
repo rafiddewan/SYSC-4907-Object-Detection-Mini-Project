@@ -13,7 +13,7 @@
   MAIN function
  *----------------------------------------------------------------------------*/
 int main (void) {
-	//float measurement = 0;
+	float measurement = 0;
 	Init_RGB_LEDs();
 	Init_Ultrasonic();
 	Init_PIT(240); //gives us a period of 10 microseconds
@@ -22,7 +22,7 @@ int main (void) {
 	
 	while(1) {
 		Generate_Trigger();
-	//	Measure_Reading(&measurement);
+	  //Measure_Reading(&measurement);
 		Delay(1000);
 	}
 	
