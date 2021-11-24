@@ -3,6 +3,8 @@
 #include "ultrasonic.h"
 #include "LEDs.h"
 
+volatile int PIT_done = 0;
+
 void Init_PIT(unsigned period) {
 	// Enable clock to PIT module
 	SIM->SCGC6 |= SIM_SCGC6_PIT_MASK;
@@ -29,6 +31,7 @@ void Init_PIT(unsigned period) {
 
 void Start_PIT(void) {
 // Enable counter
+	PIT->CHANNEL[0].LDVAL = PIT_LDVAL_TSV(240);
 	PIT->CHANNEL[0].TCTRL |= PIT_TCTRL_TEN_MASK;
 }
 
@@ -46,11 +49,12 @@ void PIT_IRQHandler() {
 	// check to see which channel triggered interrupt 
 	if (PIT->CHANNEL[0].TFLG & PIT_TFLG_TIF_MASK) {
 		// clear status flag for timer channel 0
-		PIT->CHANNEL[0].TFLG &= PIT_TFLG_TIF_MASK;
+		PIT->CHANNEL[0].TFLG |= PIT_TFLG_TIF_MASK;
 		
 		// Do ISR work
 		PIN_TRIG_PT->PCOR |= PIN_TRIG;
+		
+		Control_RGB_LEDs(0,0,1);
 		Stop_PIT();
-		Control_RGB_LEDs(1,1,1);
 	}	
 }

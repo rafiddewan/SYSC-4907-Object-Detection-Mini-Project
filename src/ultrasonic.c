@@ -13,18 +13,18 @@ void Init_Ultrasonic(void){
 	PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] &= ~PORT_PCR_MUX_MASK;          
 	PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] |= PORT_PCR_MUX(1); 
 
-	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_MUX_MASK;          
-	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_MUX(1); 
+	//PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_MUX_MASK;          
+	//PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_MUX(1); 
 
 	PIN_TRIG_PT->PDDR |= PIN_TRIG; //output
 	PIN_ECHO_PT->PDDR &= ~PIN_ECHO; // input
 
 	//pull down resistors and enable on rising and falling
-	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_PS_MASK;
-	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_PE_MASK | PORT_PCR_IRQC(0x0b);
+	//PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_PS_MASK;
+	//PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_PE_MASK | PORT_PCR_IRQC(0x0b);
 	
-	//PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] &= ~PORT_PCR_PS_MASK;
-	//PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] |= PORT_PCR_PE_MASK;
+	PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] &= ~PORT_PCR_PS_MASK;
+	PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] |= PORT_PCR_PE_MASK;
 	
 	/* Enable Interrupts */
 	NVIC_SetPriority(PORTA_IRQn, 128); // 0, 64, 128 or 192
@@ -34,16 +34,19 @@ void Init_Ultrasonic(void){
 
 void Generate_Trigger(){
 	PIN_TRIG_PT->PSOR |= PIN_TRIG;
-	Delay(10);
-	//Delay_us(1000);
-	PIN_TRIG_PT->PCOR |= PIN_TRIG;
-	//Start_PIT();
+	//Delay(10);
+	//PIN_TRIG_PT->PCOR |= PIN_TRIG;
+	Start_PIT();
 	//Control_RGB_LEDs(0,1,0);
+}
+
+void Clear_Trigger(){
+	PIN_TRIG_PT->PCOR |= PIN_TRIG;
 }
 
 void PortA_IRQHandler(void){
 	//clear pending IRQ
-	NVIC_ClearPendingIRQ(PIT_IRQn);
+	NVIC_ClearPendingIRQ(PORTA_IRQn);
 	if(PORTA->ISFR & PIN_ECHO){
 		
 		// clear status flag for timer channel 0
