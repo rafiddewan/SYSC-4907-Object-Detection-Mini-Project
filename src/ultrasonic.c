@@ -15,35 +15,34 @@ void Init_Ultrasonic(void){
 	PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] &= ~PORT_PCR_MUX_MASK;          
 	PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] |= PORT_PCR_MUX(1); 
 
-	//PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_MUX_MASK;          
-	//PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_MUX(1); 
+	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_MUX_MASK;          
+//	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_MUX(1); 
 
 	PIN_TRIG_PT->PDDR |= PIN_TRIG; //output
-	
+	//PIN_ECHO_PT->PDDR &= ~PIN_ECHO; // input
+		
 	//Set pin multiplexer to TPM0_CH4 mode and enable 
-	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_MUX_MASK;          
-	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_MUX(3) | PORT_PCR_PE_MASK;
+	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_MUX(3);
 	
 	//Initialize TPM and it's interrupts
 	Init_TPM();
 	Init_TPM_Interrupt();
 	
-	//PIN_ECHO_PT->PDDR &= ~PIN_ECHO; // input
 
 	//pull down resistors
-	//PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_PS_MASK;
-	//PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_IRQC(0x0b); Enable interrupt on pin as gpio
+//	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_PS_MASK;
+//	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_IRQC(0x0b); //Enable interrupt on pin as gpio
 	
 	//PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] &= ~PORT_PCR_PS_MASK;
 	
 //	/* Enable Interrupts */
-//	NVIC_SetPriority(PORTA_IRQn, 128); // 0, 64, 128 or 192
-//	NVIC_ClearPendingIRQ(PORTA_IRQn); 
-//	NVIC_EnableIRQ(PORTA_IRQn);
+	NVIC_SetPriority(PORTA_IRQn, 128); // 0, 64, 128 or 192
+	NVIC_ClearPendingIRQ(PORTA_IRQn); 
+	NVIC_EnableIRQ(PORTA_IRQn);
 }
 
 void Generate_Trigger(){
-	Enable_TPM();
+	//Enable_TPM();
 	PIN_TRIG_PT->PSOR |= PIN_TRIG;
 	//Delay(10);
 	//PIN_TRIG_PT->PCOR |= PIN_TRIG;
@@ -111,27 +110,14 @@ void TPM0_IRQHandler(void) {
 		}
 	}
 }
-//void PORTA_IRQHandler(void){
-//	printf("Handler has been reached");
-//	//clear pending IRQ
-//	NVIC_ClearPendingIRQ(PORTA_IRQn);
-//	if(PORTA->ISFR & PIN_ECHO){
-//		// clear status flag for timer channel 0
-//		PORTA->ISFR &= PIN_ECHO;
-//		DEBUG_PORT->PCOR = MASK(DBG_ISR_POS);
-//		Control_RGB_LEDs(1,0,0); //test if there is output from echo
-//		/*if(!timer_started)
-//		{
-//			//start timer
-//			Start_PIT();
-//			timer_started = 1;
-//		}
-//		else
-//		{
-//			//stop timer
-//			Stop_PIT();
-//			timer_started = 0;
-//		}*/
 
-//	}
-//}
+void PORTA_IRQHandler(void){
+	//printf("Handler has been reached");
+	//clear pending IRQ
+	NVIC_ClearPendingIRQ(PORTA_IRQn);
+	if(PORTA->ISFR & PIN_ECHO){
+		// clear status flag for timer channel 0
+		PORTA->ISFR &= PIN_ECHO;
+		Control_RGB_LEDs(0,1,0); //test if there is output from echo
+	}
+}

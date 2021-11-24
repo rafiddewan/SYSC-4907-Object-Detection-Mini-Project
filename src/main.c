@@ -25,18 +25,6 @@ int main (void) {
 	//	Measure_Reading(&measurement);
 		Delay(1000);
 	}
-//	Generate_Trigger(); //test led
-//	Generate_Trigger(); //test led
-//	Generate_Trigger(); //test led
-//	Generate_Trigger(); //test led
-//	Generate_Trigger(); //test led
-//	while(1){
-////		Generate_Trigger();
-////		Measuring_Reading(&measurement);
-//		
-//		//Reccomended delay for each trigger after reading is about 50ms
-////		Delay(250);
-//	}
 	
 	/*
 	Clear_LCD();

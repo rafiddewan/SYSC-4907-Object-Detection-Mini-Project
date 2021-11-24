@@ -68,8 +68,8 @@ void Init_TPM()
 	//set channel 4 to input capture mode on both edges and enable channel interrupts
 	TPM0->CONTROLS[3].CnSC = TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK;
 
-	//Enable Timer Interrupt with clock divider as 4
-	TPM0->SC = (TPM_SC_TOIE_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(2));
+	//Enable Timer Interrupt with clock divider as 2
+	TPM0->SC = (TPM_SC_TOIE_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(1));
 	
 	//avoid any interrupt trigger after intialization
 	Disable_TPM();
