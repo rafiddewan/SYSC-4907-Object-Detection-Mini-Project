@@ -8,7 +8,7 @@
 #define LED_ON_TIME_TICKS (500)
 #define LED_UPDATE_PERIOD (TICK_FREQUENCY/50)
 
-#define PWM_MAX_COUNT (600)
+#define PWM_MAX_COUNT (0xFFFF)
 
 void Init_PIT(unsigned period);
 void Start_PIT(void);

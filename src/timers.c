@@ -1,12 +1,7 @@
 #include "timers.h"
-#include "MKL25Z4.h"
 #include "ultrasonic.h"
+#include "LEDs.h"
 #include <stdio.h>
-
-extern volatile int measureFlag;
-extern volatile int overflow;
-extern volatile int timeElapsed;
-static int echoFallingEdge = 0;
 
 void Init_PIT(unsigned period) {
 	// Enable clock to PIT module
@@ -55,6 +50,8 @@ void PIT_IRQHandler() {
 		// Do ISR work
 		PIN_TRIG_PT->PCOR |= PIN_TRIG;
 		Stop_PIT();
+		
+		Control_RGB_LEDs(1,0,0);
 	}	
 }
 
@@ -69,11 +66,11 @@ void Init_TPM()
 	//load the counter and mod
 	TPM0->MOD = PWM_MAX_COUNT;
 		
-	//set channel 4 to input capture mode
-	TPM0->CONTROLS[3].CnSC = TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK;
+	//set channel 4 to input capture mode on both edges and enable channel interrupts
+	TPM0->CONTROLS[3].CnSC = TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK;
 
-	//Enable Timer Interrupt
-	TPM0->SC = (TPM_SC_TOIE_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(3));
+	//Enable Timer Interrupt with clock divider as 4
+	TPM0->SC = (TPM_SC_TOIE_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(2));
 	
 	//avoid any interrupt trigger after intialization
 	Disable_TPM();
@@ -87,8 +84,23 @@ void Init_TPM_Interrupt(){
 }
 
 void Enable_TPM(){
+	// Ensure the clokc is disabled
 	TPM0->SC &= ~TPM_SC_CMOD(3);
-	TPM0->SC |= TPM_SC_CMOD(3);
+	
+	//Start reload counter value on trigger
+	TPM0->CONF |= TPM_CONF_CROT_MASK;
+	
+	//Start counting on rising edge
+	TPM0->CONF |= TPM_CONF_CSOT_MASK;
+	
+	//Allow timers to continue in debug mode
+	TPM0->CONF |= TPM_CONF_DBGMODE_MASK;
+	
+	//set the external trigger to pin when the echo pulse intiates a trigger on it
+	TPM0->CONF |= TPM_CONF_TRGSEL(0x0);
+	
+	//Enable Clock
+	TPM0->SC |= TPM_SC_CMOD(1);
 }
 
 void Disable_TPM(){
@@ -100,43 +112,6 @@ float TPM_PLL_Clock_Speed(int prescaleMode){
 	float val = PLL_CLOCK_FREQUENCY / prescaleMode;
 	val = 1 / val;
 	return val;
-}
-
-void TPM0_IRQHandler(void) {
-	
-	//Keep track of overflow for time elapsed
-	if(TPM0_SC & TPM_SC_TOF_SHIFT){
-		
-		//clear timer overflow flag and increment overflow counter
-		TPM0_SC |= TPM_SC_TOF_MASK;
-		overflow++;
-	}
-	
-	//Rising edge or falling edge has occured, measurement has either started or completed
-	if(TPM0_C4SC & TPM_CnSC_CHF_MASK) {
-		
-		//Clear channel flag
-		TPM0_C4SC |= TPM_CnSC_CHF_MASK;
-		
-		//When it's rising edge start measuring
-		if(!echoFallingEdge) {
-			
-			//Clear the count on the tpm to start capture for the input
-			TPM0_CNT = 0;
-			
-			//Signal to start measurement
-			echoFallingEdge = 1;
-		}
-		
-		//When it's falling edge capture time elapsed
-		else {
-			// Get the time elapsed
-			timeElapsed = TPM0_CNT + overflow*PWM_MAX_COUNT;
-			
-			//Set the flag that the measurement is complete
-			measureFlag = 1;
-		}
-	}
 }
 
 // *******************************ARM University Program Copyright � ARM Ltd 2013*************************************   

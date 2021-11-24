@@ -13,20 +13,30 @@
   MAIN function
  *----------------------------------------------------------------------------*/
 int main (void) {
-	float measurement = 0;
+	//float measurement = 0;
 	Init_RGB_LEDs();
 	Init_Ultrasonic();
-	Init_PIT(BUS_CLOCK_FREQUENCY/240); //gives us a period of 10 microseconds
+	Init_PIT(240); //gives us a period of 10 microseconds
 	//Init_LCD();
 	__enable_irq();
 	
-	while(1){
+	while(1) {
 		Generate_Trigger();
-		Measuring_Reading(&measurement);
-		
-		//Reccomended delay for each trigger after reading is about 50ms
-		Delay(250);
+	//	Measure_Reading(&measurement);
+		Delay(1000);
 	}
+//	Generate_Trigger(); //test led
+//	Generate_Trigger(); //test led
+//	Generate_Trigger(); //test led
+//	Generate_Trigger(); //test led
+//	Generate_Trigger(); //test led
+//	while(1){
+////		Generate_Trigger();
+////		Measuring_Reading(&measurement);
+//		
+//		//Reccomended delay for each trigger after reading is about 50ms
+////		Delay(250);
+//	}
 	
 	/*
 	Clear_LCD();

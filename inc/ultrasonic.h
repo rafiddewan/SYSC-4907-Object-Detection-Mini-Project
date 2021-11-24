@@ -2,7 +2,7 @@
 #define ULTRASONIC_H
 #include "MKL25Z4.h"
 #include "gpio_defs.h"
-
+#include "timers.h"
 #define PIN_TRIG_PORT			PORTA
 #define PIN_TRIG_PT				PTA
 #define PIN_TRIG_SHIFT		( 17 )
@@ -15,5 +15,5 @@
 
 void Init_Ultrasonic(void);
 void Generate_Trigger(void);
-void Measuring_Reading(float* measurement);
+void Measure_Reading(float* measurement);
 #endif
