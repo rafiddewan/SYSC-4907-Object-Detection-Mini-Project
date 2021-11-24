@@ -1,6 +1,6 @@
 #include <MKL25Z4.H>
 
-#define LCD_COLUMNS   8   // Number of LCD columns in characters
+#define LCD_COLUMNS   16   // Number of LCD columns in characters
 #define LCD_ROWS     	2   // Number of LCD rows
 
 /*-------------------- LCD interface hardware definitions --------------------*/

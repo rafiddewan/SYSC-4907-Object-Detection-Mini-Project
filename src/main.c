@@ -17,8 +17,9 @@ int main (void) {
 	Init_RGB_LEDs();
 	Init_Ultrasonic();
 	Init_PIT(240); //gives us a period of 10 microseconds
-	//Init_LCD();
+	Init_LCD();
 	__enable_irq();
+	Clear_LCD();
 	
 	while(1) {
 		Generate_Trigger();
