@@ -3,8 +3,12 @@
 #include "LEDs.h"
 #include "Delay.h"
 #include <MKL25Z4.h>
+#include "lcd_4bit.h"
+#include <stdio.h>
 
-volatile int timer_started = 0;
+volatile int echo_started = 0;
+char buffer[11];
+uint32_t pit_count = 0;
 
 void Init_Ultrasonic(void){
   SIM->SCGC5 |= SIM_SCGC5_PORTA_MASK;
@@ -51,20 +55,20 @@ void PORTA_IRQHandler(void){
 		
 		// clear status flag for timer channel 0
 		PORTA->ISFR &= PIN_ECHO;
-		
 		Control_RGB_LEDs(0,1,0); //test if there is output from echo
-		/*if(!timer_started)
+		if(!echo_started)
 		{
 			//start timer
-			Start_PIT();
-			timer_started = 1;
+			Set_Cursor(0,0);
+			Print_LCD("Echo Started");
+			echo_started = 1;
 		}
-		else
-		{
-			//stop timer
-			Stop_PIT();
-			timer_started = 0;
-		}*/
+		else {
+			Set_Cursor(0,1);
+			Print_LCD("Echo Ended");
+			Control_RGB_LEDs(1,1,0);
+			echo_started = 0;
+		}
 
 	}
-}
+ }

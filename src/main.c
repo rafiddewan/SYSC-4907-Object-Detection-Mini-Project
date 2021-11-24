@@ -15,19 +15,31 @@ extern volatile int PIT_done;
  *----------------------------------------------------------------------------*/
 int main (void) {
 	Init_RGB_LEDs();
-	//Init_Ultrasonic();
+	Init_Ultrasonic();
 	Init_PIT(10); //gives us a period of 10 microseconds
 	//init_switch();
 	Init_LCD();
 	__enable_irq();
+	Clear_LCD();
+	Set_Cursor(0,0);
 	while(1){
-	Generate_Trigger();
+		
+		Generate_Trigger();
+		Delay(500);
+		Clear_LCD();
+		Delay(500);
+	
+	}
+	/*while(1){
+		Generate_Trigger();
 	//while(!PIT_done){}
 	//Clear_Trigger;
 	//Control_RGB_LEDs(1,0,0);
 	//Generate_Trigger();
-	Delay(1000);
+		Delay(10000);
 	}
+	
+	*/
 	
 	//while(1){
 			//Generate_Trigger();

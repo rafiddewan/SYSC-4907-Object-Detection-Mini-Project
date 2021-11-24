@@ -40,6 +40,13 @@ void Stop_PIT(void) {
 	PIT->CHANNEL[0].TCTRL &= ~PIT_TCTRL_TEN_MASK;
 }
 
+void Set_PIT_Period(uint32_t period){
+	PIT->CHANNEL[0].LDVAL = PIT_LDVAL_TSV(period * 24);
+}
+
+uint32_t Get_PIT_Count(void){
+	return PIT->CHANNEL[0].CVAL;
+}
 
 void PIT_IRQHandler() {
 
@@ -54,7 +61,7 @@ void PIT_IRQHandler() {
 		// Do ISR work
 		PIN_TRIG_PT->PCOR |= PIN_TRIG;
 		
-		Control_RGB_LEDs(0,0,1);
+		//Control_RGB_LEDs(0,0,1);
 		Stop_PIT();
 	}	
 }
