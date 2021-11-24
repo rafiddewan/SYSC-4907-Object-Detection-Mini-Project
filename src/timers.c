@@ -9,7 +9,7 @@ void Init_PIT(unsigned period) {
 	
 	// Enable module, freeze timers in debug mode
 	PIT->MCR &= ~PIT_MCR_MDIS_MASK;
-	PIT->MCR |= PIT_MCR_FRZ_MASK;
+	//PIT->MCR |= PIT_MCR_FRZ_MASK;
 	
 	// Initialize PIT0 to count down from argument 
 	PIT->CHANNEL[0].LDVAL = PIT_LDVAL_TSV(period);
@@ -45,13 +45,12 @@ void PIT_IRQHandler() {
 	// check to see which channel triggered interrupt 
 	if (PIT->CHANNEL[0].TFLG & PIT_TFLG_TIF_MASK) {
 		// clear status flag for timer channel 0
-		PIT->CHANNEL[0].TFLG &= PIT_TFLG_TIF_MASK;
+		PIT->CHANNEL[0].TFLG |= PIT_TFLG_TIF_MASK;
 		
 		// Do ISR work
 		PIN_TRIG_PT->PCOR |= PIN_TRIG;
-		Stop_PIT();
-		
 		Control_RGB_LEDs(1,0,0);
+		Stop_PIT();
 	}	
 }
 
