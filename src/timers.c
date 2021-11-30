@@ -57,53 +57,55 @@ void PIT_IRQHandler() {
 void Init_TPM()
 {
 	//turn on clock to TPM 
-	SIM->SCGC6 |= SIM_SCGC6_TPM0_MASK;
+	SIM->SCGC6 |= SIM_SCGC6_TPM2_MASK;
 	
 	//set clock source for tpm
-	SIM->SOPT2 |= (SIM_SOPT2_TPMSRC(1) | SIM_SOPT2_PLLFLLSEL_MASK);
-
+	SIM->SOPT2 |= SIM_SOPT2_TPMSRC(1) | SIM_SOPT2_PLLFLLSEL_MASK;
+	
 	//load the counter and mod
-	TPM0->MOD = PWM_MAX_COUNT;
+	TPM2->MOD = PWM_MAX_COUNT;
 		
-	//set channel 4 to input capture mode on both edges and enable channel interrupts
-	TPM0->CONTROLS[4].CnSC = TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK;
-
-	//Enable Timer Interrupt with clock divider as 8
-	TPM0->SC = (TPM_SC_TOIE_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(3));
+	//set channel 0 to input capture mode on both edges and enable channel interrupts
+	TPM2->CONTROLS[0].CnSC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK;
+	//TPM2->CONTROLS[0].CnSC &= ~(TPM_CnSC_MSA_MASK | TPM_CnSC_MSB_MASK);
+	
+	TPM2->SC = (TPM_SC_TOIE_MASK | TPM_SC_CMOD(1) | TPM_SC_PS(6));
 	
 	//avoid any interrupt trigger after intialization
-	Disable_TPM();
+	//Disable_TPM();
+	TPM2->CONTROLS[0].CnV = 0;
+	Init_TPM_Interrupt();
 }
 
 void Init_TPM_Interrupt(){
 	//Initalize interrupts for TPM
-	NVIC_SetPriority(TPM0_IRQn, 128); // 0, 64, 128 or 192
-	NVIC_ClearPendingIRQ(TPM0_IRQn); 
-	NVIC_EnableIRQ(TPM0_IRQn);
+	NVIC_SetPriority(TPM2_IRQn, 128); // 0, 64, 128 or 192
+	NVIC_ClearPendingIRQ(TPM2_IRQn); 
+	NVIC_EnableIRQ(TPM2_IRQn);
 }
 
 void Enable_TPM(){
 	// Ensure the clock is disabled
-	TPM0->SC &= ~TPM_SC_CMOD(3);
+	TPM2->SC &= ~TPM_SC_CMOD(3);
 	
 	//Start reload counter value on trigger
-	TPM0->CONF |= TPM_CONF_CROT_MASK;
+	TPM2->CONF |= TPM_CONF_CROT_MASK;
 	
 	//Start counting on rising edge
-	TPM0->CONF |= TPM_CONF_CSOT_MASK;
+	TPM2->CONF |= TPM_CONF_CSOT_MASK;
 	
 	//Allow timers to continue in debug mode
-	TPM0->CONF |= TPM_CONF_DBGMODE_MASK;
+	TPM2->CONF |= TPM_CONF_DBGMODE(3);
 	
 	//set the external trigger to pin when the echo pulse intiates a trigger on it
-	TPM0->CONF |= TPM_CONF_TRGSEL(0x0);
+	TPM2->CONF |= TPM_CONF_TRGSEL(0x0);
 	
 	//Enable Clock
-	TPM0->SC |= TPM_SC_CMOD(1);
+	TPM2->SC |= TPM_SC_CMOD(1);
 }
 
 void Disable_TPM(){
-	TPM0->SC &= ~TPM_SC_CMOD(3);
+	TPM2->SC &= ~TPM_SC_CMOD(3);
 }
 
 float TPM_PLL_Clock_Speed(int prescaleMode){

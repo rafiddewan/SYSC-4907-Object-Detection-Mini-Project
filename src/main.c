@@ -13,17 +13,18 @@
   MAIN function
  *----------------------------------------------------------------------------*/
 int main (void) {
-	float measurement = 0;
+	//float measurement = 0;
 	Init_RGB_LEDs();
-	Init_Ultrasonic();
 	Init_PIT(240); //gives us a period of 10 microseconds
+	Init_Ultrasonic();
 	//Init_LCD();
 	__enable_irq();
-	
+	PIN_TRIG_PT->PSOR |= PIN_TRIG;
+	Start_PIT();
 	while(1) {
-		Generate_Trigger();
+		//Generate_Trigger();
 	  //Measure_Reading(&measurement);
-		Delay(1000);
+		//Delay(1000);
 	}
 	
 	/*

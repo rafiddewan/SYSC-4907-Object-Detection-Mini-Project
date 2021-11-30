@@ -20,29 +20,30 @@ void Init_Ultrasonic(void){
 
 	PIN_TRIG_PT->PDDR |= PIN_TRIG; //output
 	//PIN_ECHO_PT->PDDR &= ~PIN_ECHO; // input
-		
-	//Set pin multiplexer to TPM0_CH4 mode and enable 
-	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_MUX(3) | PORT_PCR_PE_MASK;
+	
+  //pull up resistors
+	//PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] &= ~PORT_PCR_PS_MASK;
+
+	//Set pin multiplexer to TPM2_CH4 mode and enable 
+	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] = PORT_PCR_MUX(3);
 	
 	//Initialize TPM and it's interrupts
 	Init_TPM();
-	Init_TPM_Interrupt();
+	//Init_TPM_Interrupt();
 	
 
-	//pull up resistors
-	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_PS_MASK;
-	PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_IRQC(0x0b); 
+	//PIN_ECHO_PORT->PCR[PIN_ECHO_SHIFT] |= PORT_PCR_IRQC(0x0b); 
 	
 	//PIN_TRIG_PORT->PCR[PIN_TRIG_SHIFT] &= ~PORT_PCR_PS_MASK;
 	
 //	/* Enable Interrupts */
-	NVIC_SetPriority(PORTA_IRQn, 128); // 0, 64, 128 or 192
-	NVIC_ClearPendingIRQ(PORTA_IRQn); 
-	NVIC_EnableIRQ(PORTA_IRQn);
+//	NVIC_SetPriority(PORTA_IRQn, 128); // 0, 64, 128 or 192
+//	NVIC_ClearPendingIRQ(PORTA_IRQn); 
+//	NVIC_EnableIRQ(PORTA_IRQn);
 }
 
 void Generate_Trigger(){
-	Enable_TPM();
+	//Enable_TPM();
 	PIN_TRIG_PT->PSOR |= PIN_TRIG;
 	//Delay(10);
 	//PIN_TRIG_PT->PCOR |= PIN_TRIG;
@@ -56,7 +57,7 @@ void Measure_Reading(float* measurement) {
 	float timeElapsed = 0;
 	//Poll until we receive the measuring flag
 	while(!measureFlag){
-		//printf("%lu", (unsigned long)TPM0_C3V);
+		//printf("%lu", (unsigned long)TPM2_C3V);
 	}
 	
 	Control_RGB_LEDs(1, 0, 0);
@@ -73,22 +74,25 @@ void Measure_Reading(float* measurement) {
 	ticksElapsed = 0;
 }
 
-void TPM0_IRQHandler(void) {
+void TPM2_IRQHandler(void) {
 	
 	Control_RGB_LEDs(1, 1, 0);
+	TPM2->SC |= TPM_SC_TOF_MASK;
+	TPM2_C0SC |= TPM_CnSC_CHF_MASK;
+	
 	//Keep track of overflow for time elapsed
-	if(TPM0_STATUS & TPM_STATUS_TOF_MASK){
+	if(TPM2_STATUS & TPM_STATUS_TOF_MASK){
 		
 		//clear timer overflow flag and increment overflow counter
-		TPM0_SC |= TPM_SC_TOF_MASK;
+		TPM2->SC |= TPM_SC_TOF_MASK;
 		overflow++;
 	}
 	
 	//Rising edge or falling edge has occured, measurement has either started or completed
-	if(TPM0_STATUS & TPM_STATUS_CH4F_MASK) {
+	if(TPM2_STATUS & TPM_STATUS_CH4F_MASK) {
 		
 		//Clear channel flag
-		TPM0_C4SC |= TPM_CnSC_CHF_MASK;
+		TPM2_C0SC |= TPM_CnSC_CHF_MASK;
 		
 		//When it's rising edge start measuring
 		if(!echoFallingEdge) {
@@ -100,7 +104,7 @@ void TPM0_IRQHandler(void) {
 		//When it's falling edge capture time elapsed
 		else {
 			// Get the time elapsed
-			ticksElapsed = TPM0_CNT + overflow*PWM_MAX_COUNT;
+			ticksElapsed = TPM2_C0V + overflow*PWM_MAX_COUNT;
 			
 			//Set the flag that the measurement is complete
 			measureFlag = 1;
