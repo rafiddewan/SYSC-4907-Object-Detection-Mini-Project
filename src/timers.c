@@ -3,6 +3,8 @@
 #include "LEDs.h"
 #include <stdio.h>
 
+extern int overflow;
+
 void Init_PIT(unsigned period) {
 	// Enable clock to PIT module
 	SIM->SCGC6 |= SIM_SCGC6_PIT_MASK;
@@ -13,23 +15,34 @@ void Init_PIT(unsigned period) {
 	
 	// Initialize PIT0 to count down from argument 
 	PIT->CHANNEL[0].LDVAL = PIT_LDVAL_TSV(period);
-
+	PIT->CHANNEL[1].LDVAL = PIT_LDVAL_TSV(PWM_MAX_COUNT);
+	
 	// No chaining
-	PIT->CHANNEL[0].TCTRL &= PIT_TCTRL_CHN_MASK;
+	PIT->CHANNEL[0].TCTRL &= ~PIT_TCTRL_CHN_MASK;
 	
 	// Generate interrupts
 	PIT->CHANNEL[0].TCTRL |= PIT_TCTRL_TIE_MASK;
-
+	PIT->CHANNEL[1].TCTRL |= PIT_TCTRL_TIE_MASK;
+	
 	/* Enable Interrupts */
 	NVIC_SetPriority(PIT_IRQn, 128); // 0, 64, 128 or 192
 	NVIC_ClearPendingIRQ(PIT_IRQn); 
 	NVIC_EnableIRQ(PIT_IRQn);	
 }
 
+void Start_PIT2(void) {
+// Enable counter
+	PIT->CHANNEL[1].TCTRL |= PIT_TCTRL_TEN_MASK;
+}
 
 void Start_PIT(void) {
 // Enable counter
 	PIT->CHANNEL[0].TCTRL |= PIT_TCTRL_TEN_MASK;
+}
+
+void Stop_PIT2(void) {
+// Disable counter
+	PIT->CHANNEL[1].TCTRL &= ~PIT_TCTRL_TEN_MASK;
 }
 
 void Stop_PIT(void) {
@@ -51,6 +64,16 @@ void PIT_IRQHandler() {
 		PIN_TRIG_PT->PCOR |= PIN_TRIG;
 		//Control_RGB_LEDs(1,0,0);
 		Stop_PIT();
+	}	
+	
+	// check to see which channel triggered interrupt 
+	if (PIT->CHANNEL[1].TFLG & PIT_TFLG_TIF_MASK) {
+		// clear status flag for timer channel 0
+		PIT->CHANNEL[1].TFLG |= PIT_TFLG_TIF_MASK;
+		
+		// Do ISR work
+		overflow++;
+		Control_RGB_LEDs(1,0,0);
 	}	
 }
 
@@ -94,7 +117,7 @@ void Disable_TPM(){
 	TPM0->SC &= ~TPM_SC_CMOD(3);
 }
 
-float TPM_PLL_Clock_Speed(int prescaleMode){
+float Clock_Speed(int prescaleMode){
 	//return clock speed in seconds/tick
 	float val = PLL_CLOCK_FREQUENCY / prescaleMode;
 	val = 1 / val;
