@@ -51,7 +51,7 @@ int Measure_Reading(float* measurement) {
 	float timeElapsed = 0;
 	
 	while(!measureFlag) {
-		if(overflow >= 2 && ticksElapsed > 32){
+		if(overflow == 1){
 			
 			//Failure
 			return 0;
@@ -91,13 +91,17 @@ void PORTA_IRQHandler(void){
 		
 		//Falling edge, update the LCD
 		else {
-			ticksElapsed = PWM_MAX_COUNT - PIT_CVAL1 + PWM_MAX_COUNT*overflow;
-			Stop_PIT2();
-			echoFallingEdge = 0;
-			overflow = 0;
-//			sprintf(buffer,"%3.2f", currMeasurement);
-//			Set_Cursor(0,1);
-//			Print_LCD(buffer);
+			if (overflow == 0)
+			{
+				ticksElapsed = PWM_MAX_COUNT - PIT_CVAL1;
+				measureFlag = 1;
+	//			sprintf(buffer,"%3.2f", currMeasurement);
+	//			Set_Cursor(0,1);
+	//			Print_LCD(buffer);
+			}
+				Stop_PIT2();
+				echoFallingEdge = 0;
+				overflow = 0;
 		}
 
 	}

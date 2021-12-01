@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 extern int overflow;
+extern int measureFlag;
 
 void Init_PIT(unsigned period) {
 	// Enable clock to PIT module
@@ -72,7 +73,8 @@ void PIT_IRQHandler() {
 		PIT->CHANNEL[1].TFLG |= PIT_TFLG_TIF_MASK;
 		
 		// Do ISR work
-		overflow++;
+		overflow = 1;
+		measureFlag = 1;
 		Control_RGB_LEDs(1,0,0);
 	}	
 }
@@ -118,6 +120,7 @@ void Disable_TPM(){
 }
 
 float Clock_Speed(int prescaleMode){
+	
 	//return clock speed in seconds/tick
 	float val = PLL_CLOCK_FREQUENCY / prescaleMode;
 	val = 1 / val;
